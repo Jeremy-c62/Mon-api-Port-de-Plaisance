@@ -1,3 +1,5 @@
+const passwordValidator = require('password-validator');
+const passwordSchema = new passwordValidator();
 
 passwordSchema
     .is().min(10)
