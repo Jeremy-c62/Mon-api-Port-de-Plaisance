@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { AuthContext } from "../../context/authContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Login({ onLoginSuccess }) {
     const [toggle, setToggle] = useState(false);
@@ -18,20 +20,43 @@ export default function Login({ onLoginSuccess }) {
     };
 
     const [formValues, setFormValues] = useState(initialValues);
+    const [errorMessage, setErrorMessage] = useState(""); // Pour afficher un message d'erreur personnalisé
 
-    const handleChange = e => {
+    // Récupération des données du contexte d'authentification
+    const { formError, login, successfullyLogin } = useContext(AuthContext);
+
+    const handleChange = (e) => {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Simuler une connexion réussie et appeler la fonction `onLoginSuccess`
-        onLoginSuccess();
+
+        try {
+            // Tenter de se connecter avec les valeurs du formulaire
+            await login(formValues);
+
+            // Si la connexion réussie, appelle onLoginSuccess
+            if (onLoginSuccess) {
+                onLoginSuccess();
+            }
+        } catch (error) {
+            console.error("Erreur de connexion", error);
+            setErrorMessage("Email ou mot de passe incorrect.");
+        }
     };
 
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (successfullyLogin) {
+            navigate('/'); // Redirige vers la page d'accueil après connexion
+        }
+    }, [successfullyLogin, navigate]);
+
     return (
-        <form onSubmit={handleSubmit} className="w-50 mx-auto">
+        <form onSubmit={handleLogin} className="w-50 mx-auto">
             <h1 className="mb-4">Se connecter</h1>
 
             <div className="mb-3">
@@ -65,7 +90,12 @@ export default function Login({ onLoginSuccess }) {
                 </div>
             </div>
 
-            <button type="submit" className="btn btn-primary w-100">Se connecter</button>
+            {/* Affichage des erreurs */}
+            {(formError || errorMessage) && (
+                <p className="text-danger">{formError || errorMessage}</p>
+            )}
+
+            <button type="submit" className="btn btn-primary w-100" onClick={handleLogin}>Se connecter</button>
 
             <h2 className="mt-4 text-center">
                 Vous n'avez pas de compte ? <a href="/register">Créez un compte</a>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import axios from "axios";
 
 export default function Register() {
 
@@ -10,7 +11,7 @@ export default function Register() {
 
     // Fonction pour basculer la visibilité du mot de passe
     const showPassword = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Empêche la soumission du formulaire
         setToggle(!toggle);
     };
 
@@ -22,7 +23,9 @@ export default function Register() {
     };
 
     const [formValues, setFormValues] = useState(initialValues);
-    const [errors, setErrors] = useState({}); // Utiliser pour stocker les erreurs de validation
+    const [formError, setFormError] = useState({});
+    const [errors, setErrors] = useState({});
+    const [isSubmit, setIsSubmit] = useState(false);
 
     const handleChange = e => {
         const { name, value } = e.target;
@@ -39,7 +42,7 @@ export default function Register() {
         if (!formValues.firstname) errorFields.firstname = "Le nom est obligatoire";
         else if (!regexName.test(formValues.firstname)) errorFields.firstname = "3 - 15 caractères, sans caractères spéciaux";
 
-        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
         if (!formValues.email) errorFields.email = "L'email est obligatoire";
         else if (!regexEmail.test(formValues.email)) errorFields.email = "Email invalide";
 
@@ -50,19 +53,46 @@ export default function Register() {
         return errorFields;
     };
 
-    const handleSubmit = e => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Vérifier les erreurs de validation
         const validationErrors = verifyInput(formValues);
         if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
+            setErrors(validationErrors); // Afficher les erreurs de validation sur les champs
         } else {
-            console.log("Formulaire soumis avec succès", formValues);
+            try {
+                // Envoyer la requête POST avec axios
+                axios.post(`${process.env.REACT_APP_BASE_URL}/register`, formValues)
+                console.log("Formulaire soumis avec succès", formValues);
+                setIsSubmit(true); // Mettre à jour l'état de soumission réussie
+                setFormValues(initialValues); // Réinitialiser les valeurs du formulaire
+
+                // Réinitialiser les erreurs de validation
+                setErrors({});
+                setFormError({});
+
+                // Effacer le message d'inscription validée après 3 secondes
+                setTimeout(() => {
+                    setIsSubmit(false);
+                }, 3000);
+
+            } catch (error) {
+                // Si l'email est déjà utilisé, gérer l'erreur
+                if (error.response && error.response.data.error && error.response.data.error.name === "ValidationError") {
+                    setFormError({ email: "Cet email est déjà utilisé." });
+                } else {
+                    setFormError({ email: "Une erreur est survenue. Veuillez réessayer." });
+                }
+            }
         }
     };
 
     return (
         <main className="container mt-5">
-            <form className="w-50 mx-auto">
+            {Object.keys(formError).length === 0 && isSubmit &&
+                <div className="alert alert-success" role="alert">Inscription validée !</div>}
+            <form className="w-50 mx-auto" onSubmit={handleSubmit}>
                 <h1 className="mb-4">S'inscrire</h1>
 
                 <div className="mb-3">
@@ -97,14 +127,15 @@ export default function Register() {
                     <label htmlFor="email" className="form-label">Email</label>
                     <input
                         type="email"
-                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                        className={`form-control ${errors.email || formError.email ? 'is-invalid' : ''}`}
                         id="email"
                         name="email"
                         placeholder="Entrez votre email"
                         value={formValues.email}
                         onChange={handleChange}
                     />
-                    {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+                    {/* Afficher l'erreur spécifique pour l'email */}
+                    {(errors.email || formError.email) && <div className="invalid-feedback">{formError.email || errors.email}</div>}
                 </div>
 
                 <div className="mb-3 position-relative">
@@ -126,7 +157,7 @@ export default function Register() {
                     {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100" onClick={handleSubmit}>S'inscrire</button>
+                <button type="submit" className="btn btn-primary w-100">S'inscrire</button>
 
                 <h2 className="mt-4 text-center">
                     Déjà enregistré ? <a href="/login">Se connecter</a>

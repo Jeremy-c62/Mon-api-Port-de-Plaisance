@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { AuthContext } from '../context/authContext'; // Importer le contexte d'authentification
 
 export default function Navbar() {
+    const { currentUser } = useContext(AuthContext); // Obtenir l'utilisateur actuel
+
     return (
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
-                <Link className="navbar-brand" to="/">Port de plaissance russel</Link>
+                <Link className="navbar-brand" to="/">Port de plaisance Russel</Link>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
                 </button>
@@ -22,6 +25,12 @@ export default function Navbar() {
                         <li className="nav-item">
                             <Link className="nav-link" to="/login">Connexion</Link>
                         </li>
+                        {/* Afficher le lien "Réservation" seulement si l'utilisateur est connecté */}
+                        {currentUser && (
+                            <li className="nav-item">
+                                <Link className="nav-link" to="/reservation">Réservation</Link>
+                            </li>
+                        )}
                     </ul>
                 </div>
             </div>

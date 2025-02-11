@@ -1,17 +1,19 @@
+import React, { useContext } from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import Register from './pages/connection/Register';
 import Login from './pages/connection/Login';
 import Home from './pages/home';
-import Layout from './components/Layout.js';  // Importez le Layout global
+import Layout from './components/Layout.js';
+import Reservation from './pages/Reservation'; // Importer la page de réservation
+import { AuthContext } from "./context/authContext.js";
 
 function App() {
-
-  const connected = false;  // Définir la connexion, à ajuster selon l'état réel de l'utilisateur
+  const { currentUser } = useContext(AuthContext);  // Utilisation du contexte d'authentification
 
   // Composant pour protéger les routes privées
   const PrivateRoute = ({ children }) => {
-    if (!connected) {
-      // Si non connecté, redirige vers la page de login
+    if (!currentUser) {
+      // Si l'utilisateur n'est pas connecté, on le redirige vers la page de login
       return <Navigate to="/login" />;
     }
     return children;
@@ -23,22 +25,30 @@ function App() {
       element: <Layout />,  // Utilisation du Layout global
       children: [
         {
-          path: '/',  // Page d'accueil, toujours accessible
+          path: '/',  // Page d'accueil principale
           element: <Home />
         },
         {
-          path: '/register',  // Page d'inscription, pas protégée
+          path: '/register',  // Page d'inscription
           element: <Register />
         },
         {
-          path: '/login',  // Page de connexion, pas protégée
+          path: '/login',  // Page de connexion
           element: <Login />
         },
         {
-          path: '/profile',  // Exemple de page privée (ex: profil utilisateur)
+          path: '/dashboard',  // Nouvelle page d'accueil après connexion
           element: (
             <PrivateRoute>
-              <div>Page de profil</div>
+              <Home />
+            </PrivateRoute>
+          ),
+        },
+        {
+          path: '/reservation',  // Page de réservation
+          element: (
+            <PrivateRoute>
+              <Reservation /> {/* Composant pour la page de réservation */}
             </PrivateRoute>
           ),
         },
