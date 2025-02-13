@@ -10,14 +10,14 @@ router.post('/login', userCtrl.login);
 router.get('/home', auth, userCtrl.home);
 
 // CRUD Routes
-router.get('/:id', userCtrl.getAllUsers);         // READ: Récupérer tous les utilisateurs
+router.get('/', userCtrl.getAllUsers);         // READ: Récupérer tous les utilisateurs
 router.get('/:id', userCtrl.getUserById);      // READ: Récupérer un utilisateur par ID
 router.put('/:id', userCtrl.updateUser);       // UPDATE: Mettre à jour un utilisateur
 router.delete('/:id', userCtrl.deleteUser);    // DELETE: Supprimer un utilisateur
 
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
-    User.findOByIdAndDelete(id)
+    User.findByIdAndDelete(id)
         .then(deletedUser => {
             if (!deletedUser) {
                 return res.status(404).json({ message: 'Utilisateur non trouvé' });

@@ -23,7 +23,10 @@ app.use(limiter);
 
 const userRoute = require('./router/user');  // Assure-toi que ton fichier de routes 'user.js' est correct
 app.use('/api', userRoute);  // Préfixe les routes utilisateur avec '/api'
-
+app.get('/api/users', (req, res) => {
+    // Retourne la liste des utilisateurs
+    res.json(users);
+});
 app.get('/', (req, res) => {
     res.send('Bienvenue sur l\'API');
 });
