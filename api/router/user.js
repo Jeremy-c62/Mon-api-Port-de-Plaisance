@@ -15,4 +15,20 @@ router.get('/:id', userCtrl.getUserById);      // READ: Récupérer un utilisate
 router.put('/:id', userCtrl.updateUser);       // UPDATE: Mettre à jour un utilisateur
 router.delete('/:id', userCtrl.deleteUser);    // DELETE: Supprimer un utilisateur
 
+router.delete('/:id', (req, res) => {
+    const { id } = req.params;
+    User.findOByIdAndDelete(id)
+        .then(deletedUser => {
+            if (!deletedUser) {
+                return res.status(404).json({ message: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
+        })
+        .catch(err => {
+            console.error('Erreur lors de la suppression de l\'utilisateur:', err);
+            res.status(500).json({ error: 'Erreur interne lors de la suppression de l\'utilisateur' });
+        });
+});
+
+
 module.exports = router;

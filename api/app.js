@@ -6,7 +6,12 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const helmet = require('helmet');
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({
+    origin: 'http://localhost:3000',  // Autoriser les requêtes depuis localhost:3000 (React)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Autoriser ces méthodes HTTP
+    allowedHeaders: ['Content-Type']  // Autoriser les en-têtes spécifiques si nécessaire
+}));
+
 app.use(express.json());
 app.use(helmet());
 
