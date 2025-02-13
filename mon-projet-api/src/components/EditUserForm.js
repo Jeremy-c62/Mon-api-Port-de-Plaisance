@@ -18,7 +18,7 @@ const EditUserForm = ({ user, onUserUpdated }) => {
 
         const updatedUser = { lastname, firstname, email };
 
-        axios.put(`http://localhost:5000/users/${email}`, updatedUser) // Remplacez par l'URL de votre API
+        axios.put(`http://localhost:8080/api/users/${user.email}`, updatedUser) // Remplacez par l'URL de votre API
             .then(response => {
                 onUserUpdated();
             })

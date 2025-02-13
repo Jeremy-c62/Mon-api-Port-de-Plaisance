@@ -13,7 +13,7 @@ const UserManagementPage = () => {
     };
 
     const handleDelete = (email) => {
-        axios.delete(`http://localhost:8080/users/${email}`)  // Remplacez l'URL par celle de votre API
+        axios.delete(`http://localhost:8080/api/users/${email}`)  // Remplacez l'URL par celle de votre API
             .then(() => {
                 alert('Utilisateur supprimé');
             })

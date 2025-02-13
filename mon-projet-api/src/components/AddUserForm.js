@@ -12,7 +12,7 @@ const AddUserForm = ({ onUserAdded }) => {
 
         const newUser = { lastname, firstname, email, password };
 
-        axios.post('http://localhost:5000/users', newUser)  // Remplacez par l'URL de votre API
+        axios.post(`http://localhost:8080/api/users/${email}`, newUser)  // Remplacez par l'URL de votre API
             .then(response => {
                 onUserAdded();
                 setLastname('');
