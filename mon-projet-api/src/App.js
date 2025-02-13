@@ -1,24 +1,13 @@
-import React, { useContext } from "react";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Register from './pages/connection/Register';
 import Login from './pages/connection/Login';
 import Home from './pages/home';
 import Layout from './components/Layout.js';
-import Reservation from './pages/Reservation'; // Importer la page de réservation
-import { AuthContext } from "./context/authContext.js";
+import Reservation from './pages/Reservation';
+import CardsReservation from './pages/ReservationCard.js';
+import UserManagementPage from './pages/UserManagementPage';  // Importation de la nouvelle page UserManagementPage
 
 function App() {
-  const { currentUser } = useContext(AuthContext);  // Utilisation du contexte d'authentification
-
-  // Composant pour protéger les routes privées
-  const PrivateRoute = ({ children }) => {
-    if (!currentUser) {
-      // Si l'utilisateur n'est pas connecté, on le redirige vers la page de login
-      return <Navigate to="/login" />;
-    }
-    return children;
-  };
-
   const router = createBrowserRouter([
     {
       path: "/",
@@ -38,19 +27,20 @@ function App() {
         },
         {
           path: '/dashboard',  // Nouvelle page d'accueil après connexion
-          element: (
-            <PrivateRoute>
-              <Home />
-            </PrivateRoute>
-          ),
+          element: <Home />  // Accessible sans authentification
         },
         {
           path: '/reservation',  // Page de réservation
-          element: (
-            <PrivateRoute>
-              <Reservation /> {/* Composant pour la page de réservation */}
-            </PrivateRoute>
-          ),
+          element: <Reservation />  // Accessible sans authentification
+        },
+        {
+          path: '/reservationCards',  // Nouvelle route pour les cartes de réservation
+          element: <CardsReservation />  // Accessible sans authentification
+        },
+
+        {
+          path: '/userManagement',  // Nouvelle route pour la page UserManagementPage
+          element: <UserManagementPage />  // Page de gestion des utilisateurs avec fonctionnalité complète
         },
       ],
     },

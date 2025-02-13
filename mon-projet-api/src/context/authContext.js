@@ -11,13 +11,11 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(
         JSON.parse(localStorage.getItem('user')) || null
     );
-    const logout = () => {
-        setCurrentUser(null); // Réinitialiser l'utilisateur courant
-    };
+
 
 
     const login = (formValues) => {
-        axios.post('http://localhost:8080/api/login', formValues)
+        axios.post('http://localhost:8080/login', formValues)
             .then((res) => {
                 console.log(res.data);
                 setCurrentUser(res.data);
@@ -34,6 +32,11 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('user', JSON.stringify(currentUser));
         }
     }, [currentUser]);
+
+    const logout = () => {
+        setCurrentUser(null); // Réinitialiser l'utilisateur courant
+        localStorage.removeItem('null');
+    };
 
     return (
         <AuthContext.Provider value={{ successfullyLogin, currentUser, login, formError, logout }}>
