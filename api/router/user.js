@@ -1,12 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const userCtrl = require('../controllers/user');
-const passwordValidator = require('../middlewares/passwordValidator')
+const userCtrl = require('../controllers/user');  // Vérifie que ce chemin est correct
+const passwordValidator = require('../middlewares/passwordValidator');
 const auth = require('../middlewares/auth');
 
 // Routes POST pour l'inscription et la connexion
 router.post('/register', passwordValidator, userCtrl.register);
 router.post('/login', userCtrl.login);
 router.get('/home', auth, userCtrl.home);
+
+// CRUD Routes
+router.get('/:id', userCtrl.getAllUsers);         // READ: Récupérer tous les utilisateurs
+router.get('/:id', userCtrl.getUserById);      // READ: Récupérer un utilisateur par ID
+router.put('/:id', userCtrl.updateUser);       // UPDATE: Mettre à jour un utilisateur
+router.delete('/:id', userCtrl.deleteUser);    // DELETE: Supprimer un utilisateur
 
 module.exports = router;

@@ -1,67 +1,140 @@
-const User = require('../models/user');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const KEY = process.env.SECRET_KEY;
 
-// Fonction pour l'enregistrement d'un utilisateur
+// Fonction pour l'inscription d'un utilisateur
 exports.register = (req, res) => {
     const { lastname, firstname, email, password } = req.body;
 
-    // Hachage du mot de passe avant de l'enregistrer
-    bcrypt.hash(password, 10)
-        .then(hash => {
-            const user = new User({
-                lastname,
-                firstname,
-                email,
-                password: hash
+    // Vérifier si l'email est déjà utilisé
+    User.findOne({ email: email })
+        .then(existingUser => {
+            if (existingUser) {
+                return res.status(400).json({ error: "Cet email est déjà utilisé." });
+            }
+
+            // Hacher le mot de passe avant de l'enregistrer
+            bcrypt.hash(password, 10, (err, hashedPassword) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Erreur lors du hachage du mot de passe' });
+                }
+
+                // Créer une nouvelle instance d'utilisateur avec le mot de passe haché
+                const newUser = new User({
+                    lastname,
+                    firstname,
+                    email,
+                    password: hashedPassword
+                });
+
+                // Sauvegarder l'utilisateur dans la base de données
+                newUser.save()
+                    .then(() => {
+                        res.status(201).json({ message: 'Utilisateur créé avec succès' });
+                    })
+                    .catch(err => {
+                        res.status(500).json({ error: 'Erreur lors de l\'enregistrement de l\'utilisateur' });
+                    });
             });
-            // Sauvegarde du nouvel utilisateur
-            user.save()
-                .then(() => res.status(201).json({ message: "Utilisateur enregistré avec succès" }))
-                .catch(error => res.status(400).json({ error }));
         })
-        .catch(error => res.status(500).json({ error }));
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la recherche de l\'utilisateur' });
+        });
 };
 
-// Fonction pour la connexion de l'utilisateur
+// Fonction pour la connexion d'un utilisateur
 exports.login = (req, res) => {
     const { email, password } = req.body;
 
-    // Recherche de l'utilisateur par email
+    // Chercher l'utilisateur par email
     User.findOne({ email: email })
         .then(user => {
             if (!user) {
-                return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
             }
 
-            // Comparaison du mot de passe avec celui en base de données
-            bcrypt.compare(password, user.password)
-                .then(isMatch => {
-                    if (!isMatch) {
-                        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-                    }
+            // Comparer les mots de passe
+            bcrypt.compare(password, user.password, (err, isMatch) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe' });
+                }
 
-                    // Si tout est correct, création du token JWT
-                    const token = jwt.sign(
-                        { userId: user._id },
-                        KEY, // Utilisation de la clé secrète depuis l'environnement
-                        { expiresIn: '24h' }
-                    );
+                if (!isMatch) {
+                    return res.status(401).json({ error: 'Mot de passe incorrect' });
+                }
 
-                    return res.status(200).json({
-                        userId: user._id,
-                        lastname: user.lastname,
-                        firstname: user.firstname,
-                        token: token // Retourne le token JWT
-                    });
-                })
-                .catch(error => res.status(500).json({ error: "Erreur lors de la comparaison du mot de passe", details: error }));
+                // Générer un token JWT pour la session
+                const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+                res.status(200).json({ message: 'Connexion réussie', token });
+            });
         })
-        .catch(error => res.status(500).json({ error: "Erreur lors de la recherche de l'utilisateur", details: error }));
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la connexion de l\'utilisateur' });
+        });
 };
 
-// Fonction pour l'accès à la page d'accueil
+// Fonction pour récupérer tous les utilisateurs
+exports.getAllUsers = (req, res) => {
+    User.find()
+        .then(users => {
+            res.status(200).json(users);
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs' });
+        });
+};
+
+// Fonction pour récupérer un utilisateur par ID
+exports.getUserById = (req, res) => {
+    const { id } = req.params;
+
+    User.findById(id)
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json(user);
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'utilisateur' });
+        });
+};
+
+// Fonction pour mettre à jour un utilisateur
+exports.updateUser = (req, res) => {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    User.findByIdAndUpdate(id, updatedData, { new: true })
+        .then(updatedUser => {
+            if (!updatedUser) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json(updatedUser);
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' });
+        });
+};
+
+// Fonction pour supprimer un utilisateur
+exports.deleteUser = (req, res) => {
+    const { id } = req.params;
+
+    User.findByIdAndDelete(id)
+        .then(deletedUser => {
+            if (!deletedUser) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
+        })
+        .catch(err => {
+            res.status(500).json({ error: 'Erreur lors de la suppression de l\'utilisateur' });
+        });
+};
+
+// Fonction pour la page d'accueil (protégée par auth)
 exports.home = (req, res) => {
     res.status(200).json({ message: 'Bienvenue sur la page d\'accueil' });
 };

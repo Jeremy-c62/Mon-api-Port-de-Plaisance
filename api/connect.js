@@ -8,4 +8,6 @@ const uri = `mongodb+srv://${USER}:${PASSWORD}@${NAME}.pikrp.mongodb.net/?retryW
 
 mongoose.connect(uri)
     .then(() => console.log('connected to MongoDB'))
-    .catch(err => console.log(err))
+    .catch(err => {
+        console.error('Failed to connect to MongoDB:', err);
+    });
