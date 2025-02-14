@@ -61,35 +61,36 @@ const UserManagementPage = () => {
     };
 
     return (
-        <div>
-            <h1>Gestion des Utilisateurs</h1>
+        <div className="container d-flex flex-column align-items-center mt-4">
+            <h1 className="text-center mb-4">Gestion des Utilisateurs</h1>
 
-            {editingUser ? (
-                <EditUserForm
-                    user={editingUser}
-                    onUserUpdated={handleUserUpdated}
-                />
-            ) : (
-                <AddUserForm onUserAdded={handleUserAdded} />
-            )}
+            {/* Formulaire d'ajout ou d'édition */}
+            <div className="mb-4 w-75">
+                {editingUser ? (
+                    <EditUserForm
+                        user={editingUser}
+                        onUserUpdated={handleUserUpdated}
+                    />
+                ) : (
+                    <AddUserForm onUserAdded={handleUserAdded} />
+                )}
+            </div>
 
+            {/* Affichage de la liste des utilisateurs */}
             {loading ? (
-                <p>Chargement...</p>  // Afficher un message pendant le chargement
+                <div className="text-center">
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
             ) : (
-                <UserList users={users} onEdit={handleEdit}>
-                    {users.map(user => (
-                        <div key={user._id}>
-                            <p>{user.name} ({user.email})</p>
-                            <DeleteUserButton
-                                userEmail={user.email}
-                                onDeleteSuccess={handleDeleteSuccess}
-                            />
-                        </div>
-                    ))}
-                </UserList>
+                <div className="list-group w-75">
+                    <UserList users={users} onEdit={handleEdit} />
+                </div>
             )}
 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {/* Affichage des erreurs */}
+            {error && <p className="text-danger text-center">{error}</p>}
         </div>
     );
 };
