@@ -140,11 +140,11 @@ exports.updateUser = (req, res) => {
         .catch(err => res.status(500).json({ error: 'Erreur lors de la récupération de l\'utilisateur' }));
 };
 
-// Fonction pour supprimer un utilisateur
-exports.deleteUserByEmail = (req, res) => {
-    const userEmail = req.params.email;
+// Fonction pour supprimer un utilisateur par ID
+exports.deleteUserById = (req, res) => {
+    const userId = req.params.id;
 
-    User.findOneAndDelete({ email: userEmail })
+    User.findByIdAndDelete(userId)
         .then(result => {
             if (result) {
                 return res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
