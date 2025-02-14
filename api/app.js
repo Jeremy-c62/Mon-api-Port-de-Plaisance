@@ -1,10 +1,12 @@
 require('dotenv').config();
 require('./connect');
 const express = require('express');
-const app = express();
-const rateLimit = require('express-rate-limit');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const userRoutes = require('./router/user');
+const app = express();
 
 app.use(cors({
     origin: 'http://localhost:3000',  // Autoriser les requêtes depuis localhost:3000 (React)
@@ -21,12 +23,9 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-const userRoute = require('./router/user');  // Assure-toi que ton fichier de routes 'user.js' est correct
-app.use('/api', userRoute);  // Préfixe les routes utilisateur avec '/api'
-app.get('/api/users', (req, res) => {
-    // Retourne la liste des utilisateurs
-    res.json(users);
-});
+// Route pour les utilisateurs
+app.use('/api/users', userRoutes);
+
 app.get('/', (req, res) => {
     res.send('Bienvenue sur l\'API');
 });
@@ -42,7 +41,10 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Erreur interne du serveur' });
 });
 
-const port = process.env.PORT || 8080;
-app.listen(port, () => {
-    console.log(`Serveur en cours d'exécution sur http://localhost:${port}`);
-});
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+        app.listen(process.env.PORT || 8080, () => {
+            console.log(`Serveur démarré sur http://localhost:${process.env.PORT || 8080}`);
+        });
+    })
+    .catch(err => console.error('Erreur de connexion à MongoDB:', err));

@@ -104,33 +104,56 @@ exports.getUserById = (req, res) => {
 // Fonction pour mettre à jour un utilisateur
 exports.updateUser = (req, res) => {
     const { id } = req.params;
-    const updatedData = req.body;
+    const { firstname, lastname, email, password } = req.body;
 
-    User.findByIdAndUpdate(id, updatedData, { new: true })
-        .then(updatedUser => {
-            if (!updatedUser) {
+    User.findById(id)
+        .then(user => {
+            if (!user) {
                 return res.status(404).json({ error: 'Utilisateur non trouvé' });
             }
-            res.status(200).json(updatedUser);
+
+            if (password) {
+                bcrypt.hash(password, 10, (err, hashedPassword) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Erreur lors du hachage du mot de passe' });
+                    }
+
+                    user.firstname = firstname || user.firstname;
+                    user.lastname = lastname || user.lastname;
+                    user.email = email || user.email;
+                    user.password = hashedPassword;
+
+                    user.save()
+                        .then(() => res.status(200).json({ message: 'Utilisateur mis à jour avec succès' }))
+                        .catch(err => res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' }));
+                });
+            } else {
+                user.firstname = firstname || user.firstname;
+                user.lastname = lastname || user.lastname;
+                user.email = email || user.email;
+
+                user.save()
+                    .then(() => res.status(200).json({ message: 'Utilisateur mis à jour avec succès' }))
+                    .catch(err => res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' }));
+            }
         })
-        .catch(err => {
-            res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' });
-        });
+        .catch(err => res.status(500).json({ error: 'Erreur lors de la récupération de l\'utilisateur' }));
 };
 
 // Fonction pour supprimer un utilisateur
-exports.deleteUser = (req, res) => {
-    const { id } = req.params;
+exports.deleteUserByEmail = (req, res) => {
+    const userEmail = req.params.email;
 
-    User.findByIdAndDelete(id)
-        .then(deletedUser => {
-            if (!deletedUser) {
+    User.findOneAndDelete({ email: userEmail })
+        .then(result => {
+            if (result) {
+                return res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
+            } else {
                 return res.status(404).json({ error: 'Utilisateur non trouvé' });
             }
-            res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
         })
-        .catch(err => {
-            res.status(500).json({ error: 'Erreur lors de la suppression de l\'utilisateur' });
+        .catch(error => {
+            return res.status(500).json({ error: 'Erreur du serveur' });
         });
 };
 

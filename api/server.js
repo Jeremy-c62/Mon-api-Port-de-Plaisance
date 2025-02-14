@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const http = require('http');
 const mongoose = require('mongoose');
@@ -10,12 +9,14 @@ const reservationRoutes = require('./router/reservation');
 const Reservation = require('./models/reservation');
 require('dotenv').config(); // Charger les variables d'environnement depuis .env
 
+
+// Utilisation des routes pour les utilisateurs et les réservations
+app.use('/api/users', userRoutes);
+app.use('/api/reservations', reservationRoutes);
+// Utilisation de bodyParser pour analyser les requêtes JSON
+app.use(express.json());
 // Configuration du port
 const port = process.env.PORT || 8080;
-
-// Utilisation de bodyParser pour analyser les requêtes JSON
-app.use(bodyParser.json());
-
 // Activation de CORS pour autoriser les requêtes cross-origin
 app.use(cors());
 
@@ -28,7 +29,15 @@ const uri = `mongodb+srv://${USER}:${PASSWORD}@${NAME}.pikrp.mongodb.net/`;
 mongoose.connect(uri)
     .then(() => console.log('Connecté à MongoDB'))
     .catch(err => console.error('Erreur de connexion à MongoDB:', err));
-
+app.get('/test-connection', (req, res) => {
+    mongoose.connection.db.listCollections().toArray((err, collections) => {
+        if (err) {
+            res.status(500).send('Erreur de connexion à MongoDB');
+        } else {
+            res.json(collections);
+        }
+    });
+});
 
 const User = require('./models/User');
 app.post('/reservations', (req, res) => {
@@ -104,85 +113,131 @@ app.get('/api/reservation', (req, res) => {
         });
 });
 
-// Route POST pour l'enregistrement des utilisateurs
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     const { lastname, firstname, email, password } = req.body;
 
-    // Vérifier si l'email est déjà utilisé
-    User.findOne({ email: email })
-        .then(existingUser => {
-            if (existingUser) {
-                return res.status(400).json({ error: "Cet email est déjà utilisé." });
-            }
+    try {
+        const existingUser = await User.findOne({ email: email });
+        if (existingUser) {
+            return res.status(400).json({ error: "Cet email est déjà utilisé." });
+        }
 
-            // Hacher le mot de passe avant de l'enregistrer
-            bcrypt.hash(password, 10, (err, hashedPassword) => {
-                if (err) {
-                    return res.status(500).json({ error: 'Erreur lors du hachage du mot de passe' });
-                }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-                // Créer une nouvelle instance d'utilisateur avec le mot de passe haché
-                const newUser = new User({
-                    lastname,
-                    firstname,
-                    email,
-                    password: hashedPassword
-                });
-
-                // Sauvegarder l'utilisateur dans la base de données
-                newUser.save()
-                    .then(() => {
-                        console.log(`Utilisateur inscrit: ${firstname} ${lastname}, Email: ${email}`);
-                        res.status(200).json({ message: 'Utilisateur créé avec succès' });
-                    })
-                    .catch(err => {
-                        console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', err);
-                        res.status(500).json({ error: 'Erreur interne lors de l\'enregistrement de l\'utilisateur' });
-                    });
-            });
-        })
-        .catch(err => {
-            console.error('Erreur lors de la recherche de l\'utilisateur:', err);
-            res.status(500).json({ error: 'Erreur interne lors de la recherche de l\'utilisateur' });
+        const newUser = new User({
+            lastname,
+            firstname,
+            email,
+            password: hashedPassword
         });
+
+        await newUser.save();
+        console.log(`Utilisateur inscrit: ${firstname} ${lastname}, Email: ${email}`);
+        res.status(200).json({ message: 'Utilisateur créé avec succès' });
+    } catch (err) {
+        console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', err);
+        res.status(500).json({ error: 'Erreur interne lors de l\'enregistrement de l\'utilisateur' });
+    }
 });
 
 // Route POST pour la connexion des utilisateurs
-app.post('/login', (req, res) => {
+const jwt = require('jsonwebtoken');
+
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
-    // Chercher l'utilisateur par email
-    User.findOne({ email: email })
-        .then(user => {
-            if (!user) {
-                // Si l'utilisateur n'existe pas
-                return res.status(404).json({ error: 'Utilisateur non trouvé' });
-            }
+    try {
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur non trouvé' });
+        }
 
-            // Comparer les mots de passe (ici avec bcrypt)
-            bcrypt.compare(password, user.password, (err, isMatch) => {
-                if (err) {
-                    return res.status(500).json({ error: 'Erreur interne lors de la vérification du mot de passe' });
-                }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Mot de passe incorrect' });
+        }
 
-                if (!isMatch) {
-                    return res.status(401).json({ error: 'Mot de passe incorrect' });
-                }
+        // Créer un token JWT
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            process.env.JWT_SECRET_KEY,
+            { expiresIn: '1h' } // Expire dans 1 heure
+        );
 
-                // Si le mot de passe est correct
-                res.status(200).json({ message: 'Connexion réussie', user: { lastname: user.lastname, firstname: user.firstname, email: user.email } });
-            });
+        res.status(200).json({
+            message: 'Connexion réussie',
+            token,
+            user: { lastname: user.lastname, firstname: user.firstname, email: user.email }
+        });
+    } catch (err) {
+        console.error('Erreur lors de la connexion de l\'utilisateur:', err);
+        res.status(500).json({ error: 'Erreur interne lors de la connexion de l\'utilisateur' });
+    }
+});
+
+// Route GET pour récupérer tous les utilisateurs
+app.get('/api/users', (req, res) => {
+    User.find()
+        .then(users => {
+            res.status(200).json(users);
         })
         .catch(err => {
-            console.error('Erreur lors de la connexion de l\'utilisateur:', err);
-            res.status(500).json({ error: 'Erreur interne lors de la connexion de l\'utilisateur' });
+            console.error('Erreur lors de la récupération des utilisateurs:', err);
+            res.status(500).json({ error: 'Erreur interne lors de la récupération des utilisateurs' });
         });
 });
 
-// Utilisation des routes pour les utilisateurs et les réservations
-app.use('/api/users', userRoutes);
-app.use('/api/reservations', reservationRoutes);
+// Route GET pour récupérer un utilisateur par ID
+app.get('/api/users/:id', (req, res) => {
+    const { id } = req.params;
 
+    User.findById(id)
+        .then(user => {
+            if (!user) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json(user);
+        })
+        .catch(err => {
+            console.error('Erreur lors de la récupération de l\'utilisateur:', err);
+            res.status(500).json({ error: 'Erreur interne lors de la récupération de l\'utilisateur' });
+        });
+});
+
+// Route PUT pour mettre à jour un utilisateur par ID
+app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    User.findByIdAndUpdate(id, updatedData, { new: true })
+        .then(updatedUser => {
+            if (!updatedUser) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json(updatedUser);
+        })
+        .catch(err => {
+            console.error('Erreur lors de la mise à jour de l\'utilisateur:', err);
+            res.status(500).json({ error: 'Erreur interne lors de la mise à jour de l\'utilisateur' });
+        });
+});
+
+// Route DELETE pour supprimer un utilisateur par ID
+app.delete('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+
+    User.findByIdAndDelete(id)
+        .then(deletedUser => {
+            if (!deletedUser) {
+                return res.status(404).json({ error: 'Utilisateur non trouvé' });
+            }
+            res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
+        })
+        .catch(err => {
+            console.error('Erreur lors de la suppression de l\'utilisateur:', err);
+            res.status(500).json({ error: 'Erreur interne lors de la suppression de l\'utilisateur' });
+        });
+});
 // Création du serveur HTTP
 const server = http.createServer(app);
 

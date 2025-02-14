@@ -120,7 +120,7 @@ const Reservation = () => {
                         <Col key={reservation._id} sm={12} md={6} lg={4} className="mb-4">
                             <Card className="shadow-sm">
                                 <Card.Header className="bg-primary text-white">
-                                    <h5>Emplacement catway {reservation.catwayNumber}</h5>
+                                    <h5>Catway {reservation.catwayNumber}</h5>
                                 </Card.Header>
                                 <Card.Body>
                                     <Card.Subtitle className="mb-2 text-muted"><strong>Nom :</strong> {reservation.clientName}</Card.Subtitle>
