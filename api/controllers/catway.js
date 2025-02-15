@@ -1,7 +1,13 @@
 const Catway = require('../models/catway');
+const mongoose = require('mongoose');
+const isValidId = mongoose.Types.ObjectId.isValid;
 
 // Récupérer la liste de tous les catways
 exports.getCatways = async (req, res) => {
+    const { id } = req.params;
+    if (!isValidId(id)) {
+        return res.status(400).json({ message: 'ID invalide' });
+    }
     try {
         const catways = await Catway.find();
         res.status(200).json(catways);

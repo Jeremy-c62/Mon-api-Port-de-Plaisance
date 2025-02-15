@@ -5,7 +5,7 @@ const catwaySchema = new mongoose.Schema({
     catwayNumber: { type: Number, required: true, unique: true },
     catwayType: { type: String, required: true },
     catwayState: { type: String, required: true },
-    description: { type: String, required: false }, // Ajoutez un champ description si nécessaire
+
 });
 
 // Créer le modèle à partir du schéma

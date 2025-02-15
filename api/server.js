@@ -300,6 +300,7 @@ app.post('/api/catways', (req, res) => {
     }
 
 });
+app.use('/api', catwayRoutes);
 app.use('/api/catways', catwayRoutes);
 // Configuration du port
 const port = process.env.PORT || 8080;

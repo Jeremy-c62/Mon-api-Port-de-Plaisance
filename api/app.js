@@ -71,6 +71,12 @@ app.post('/checkAvailability', async (req, res) => {
 
 app.use('/api', catwayRoutes);
 
+app.delete('/api/catways/:id', (req, res) => {
+    // Suppression du catway basé sur l'ID
+});
+
+
+
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         app.listen(process.env.PORT || 8080, () => {
