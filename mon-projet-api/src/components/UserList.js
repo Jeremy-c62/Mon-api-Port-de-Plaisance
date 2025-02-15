@@ -35,7 +35,7 @@ const UserList = ({ users, onEdit }) => {
 
         try {
             // Mise à jour des informations utilisateur
-            const response = await axios.put(`http://localhost:8080/api/users/${userId}`, {
+            await axios.put(`http://localhost:8080/api/users/${userId}`, {
                 firstname: updatedFirstName,
                 lastname: updatedLastName,
                 email: updatedEmail, // Ajout de l'email

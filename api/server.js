@@ -7,12 +7,13 @@ const bcrypt = require('bcryptjs');  // Pour le hachage des mots de passe
 const userRoutes = require('./router/user');
 const reservationRoutes = require('./router/reservation');
 const Reservation = require('./models/reservation');
+const Catway = require('./models/catway');
 require('dotenv').config(); // Charger les variables d'environnement depuis .env
 
 
 // Utilisation des routes pour les utilisateurs et les réservations
 app.use('/api/users', userRoutes);
-app.use('/api/reservations', reservationRoutes);
+app.use('/api/reservation', reservationRoutes);
 // Utilisation de bodyParser pour analyser les requêtes JSON
 app.use(express.json());
 // Configuration du port
@@ -25,43 +26,62 @@ const USER = process.env.USER_DB;
 const PASSWORD = process.env.PASSWORD_DB;
 const NAME = process.env.NAME_DB;
 const uri = `mongodb+srv://${USER}:${PASSWORD}@${NAME}.pikrp.mongodb.net/`;
+const User = require('./models/User');
 
 mongoose.connect(uri)
     .then(() => console.log('Connecté à MongoDB'))
     .catch(err => console.error('Erreur de connexion à MongoDB:', err));
-app.get('/test-connection', (req, res) => {
-    mongoose.connection.db.listCollections().toArray((err, collections) => {
-        if (err) {
-            res.status(500).send('Erreur de connexion à MongoDB');
-        } else {
-            res.json(collections);
-        }
-    });
-});
 
-const User = require('./models/User');
-app.post('/reservations', (req, res) => {
-    // logique de la réservation
+app.get('/api/catways', async (req, res) => {
+    const { catwayType } = req.query;
+
+    try {
+        // Vérifier si catwayType est bien fourni dans la requête
+        if (!catwayType) {
+            return res.status(400).json({ message: 'Le paramètre catwayType est requis' });
+        }
+
+        // Recherche des catways correspondant au type demandé (long ou short)
+        const catways = await Catway.find({ catwayType, catwayState: 'bon état' });
+
+        // Si aucun catway trouvé
+        if (!catways.length) {
+            return res.status(404).json({ message: 'Aucun catway disponible pour ce type.' });
+        }
+
+        res.status(200).json(catways);
+    } catch (error) {
+        console.error('Erreur interne lors de la récupération des catways:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des catways', error: error.message });
+    }
 });
 
 
 // Route POST pour la réservation
-app.post('/api/reservation', (req, res) => {
-    const reservationData = req.body;
+app.post('/api/reservation', async (req, res) => {
+    const { boatName, clientName, catwayNumber, catwayType, startDate, endDate } = req.body;
 
-    // Créer une nouvelle instance de réservation avec les données reçues
-    const newReservation = new Reservation(reservationData);
+    if (!boatName || !clientName || !catwayNumber || !catwayType || !startDate || !endDate) {
+        return res.status(400).json({ message: 'Tous les champs sont requis' });
+    }
 
-    // Sauvegarder la réservation dans la base de données
-    newReservation.save()
-        .then(() => {
-            console.log("Réservation ajoutée avec succès");
-            res.json({ message: 'Réservation réussie' });
-        })
-        .catch(err => {
-            console.error('Erreur lors de l\'ajout de la réservation:', err);
-            res.status(500).json({ error: 'Erreur interne lors de l\'ajout de la réservation' });
+    try {
+        // Créer une nouvelle réservation
+        const newReservation = new Reservation({
+            boatName,
+            clientName,
+            catwayNumber,
+            catwayType,
+            startDate,
+            endDate
         });
+
+        await newReservation.save();
+        res.status(201).json(newReservation);
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout de la réservation:', error);
+        res.status(500).json({ message: 'Erreur interne lors de l\'ajout de la réservation' });
+    }
 });
 
 // Route DELETE pour supprimer une réservation par ID
@@ -116,6 +136,10 @@ app.get('/api/reservation', (req, res) => {
 app.post('/register', async (req, res) => {
     const { lastname, firstname, email, password } = req.body;
 
+    if (!password || typeof password !== 'string' || password.trim() === '') {
+        return res.status(400).json({ error: 'Mot de passe invalide' });
+    }
+
     try {
         const existingUser = await User.findOne({ email: email });
         if (existingUser) {
@@ -140,6 +164,44 @@ app.post('/register', async (req, res) => {
     }
 });
 
+app.post('/api/users', async (req, res) => {
+    const { lastname, firstname, email, password } = req.body;
+
+    console.log('Données reçues:', req.body);  // Pour déboguer
+
+    // Vérifier que toutes les données sont présentes
+    if (!firstname || !lastname || !email || !password) {
+        return res.status(400).json({ message: 'Tous les champs sont requis' });
+    }
+
+    if (!password) {
+        return res.status(400).json({ message: 'Le mot de passe est requis' });
+    }
+
+    try {
+        const existingUser = await User.findOne({ email: email });
+        if (existingUser) {
+            return res.status(400).json({ error: "Cet email est déjà utilisé." });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("Mot de passe haché:", hashedPassword);
+
+        const newUser = new User({
+            lastname,
+            firstname,
+            email,
+            password: hashedPassword
+        });
+
+        await newUser.save();
+        console.log(`Utilisateur inscrit: ${firstname} ${lastname}, Email: ${email}`);
+        res.status(200).json({ message: 'Utilisateur créé avec succès' });
+    } catch (err) {
+        console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', err);
+        res.status(500).json({ error: 'Erreur interne lors de l\'enregistrement de l\'utilisateur' });
+    }
+});
 // Route POST pour la connexion des utilisateurs
 const jwt = require('jsonwebtoken');
 

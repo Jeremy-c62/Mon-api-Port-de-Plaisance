@@ -63,7 +63,7 @@ export default function Register() {
         } else {
             try {
                 // Envoyer la requête POST avec axios
-                const response = await axios.post(`http://localhost:8080/register`, formValues)
+                const response = await axios.post(`http://localhost:8080/api/users`, formValues)
                 console.log("Formulaire soumis avec succès", response.data);
                 setIsSubmit(true); // Mettre à jour l'état de soumission réussie
                 setFormValues(initialValues); // Réinitialiser les valeurs du formulaire

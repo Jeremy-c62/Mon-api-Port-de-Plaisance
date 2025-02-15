@@ -156,7 +156,40 @@ exports.deleteUserById = (req, res) => {
             return res.status(500).json({ error: 'Erreur du serveur' });
         });
 };
+exports.createUser = (req, res) => {
+    const { email, firstname, lastname, password } = req.body;
 
+    // Valider les données
+    if (!email || !firstname || !lastname || !password) {
+        return res.status(400).json({ message: 'Tous les champs sont requis' });
+    }
+
+    // Hachage du mot de passe avant de l'enregistrer
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+        if (err) {
+            return res.status(500).json({ message: 'Erreur lors du hachage du mot de passe', error: err });
+        }
+
+        // Créer un nouvel utilisateur
+        const newUser = new User({
+            email,
+            firstname,
+            lastname,
+            password: hashedPassword,
+        });
+
+        // Sauvegarder l'utilisateur dans la base de données
+        newUser.save()
+            .then(user => res.status(201).json(user)) // Réponse en cas de succès
+            .catch(err => {
+                if (err.name === 'MongoError' && err.code === 11000) {
+                    // Si l'email est déjà pris, on renvoie un message d'erreur spécifique
+                    return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+                }
+                return res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur', error: err });
+            });
+    });
+};
 // Fonction pour la page d'accueil (protégée par auth)
 exports.home = (req, res) => {
     res.status(200).json({ message: 'Bienvenue sur la page d\'accueil' });

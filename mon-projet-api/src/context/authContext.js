@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
 
 
     const login = (formValues) => {
-        axios.post('http://localhost:8080/login', formValues)
+        axios.post('http://localhost:8080/api/users', formValues)
             .then((res) => {
                 console.log(res.data);
                 setCurrentUser(res.data);

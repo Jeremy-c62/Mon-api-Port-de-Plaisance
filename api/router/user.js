@@ -10,7 +10,8 @@ router.post('/login', userCtrl.login);  // Connexion
 router.get('/home', auth, userCtrl.home);  // Page d'accueil protégée
 
 // CRUD Routes utilisateurs
-router.get('/userr/users', userCtrl.getAllUsers);           // READ: Récupérer tous les utilisateurs
+router.post('/users', userCtrl.createUser);
+router.get('/users/users', userCtrl.getAllUsers);           // READ: Récupérer tous les utilisateurs
 router.get('/users/:id', userCtrl.getUserById);       // READ: Récupérer un utilisateur par ID
 router.put('/users/:id', userCtrl.updateUser);        // UPDATE: Mettre à jour un utilisateur par ID
 router.delete('/users/:id', userCtrl.deleteUserById); // DELETE: Supprimer un utilisateur par ID

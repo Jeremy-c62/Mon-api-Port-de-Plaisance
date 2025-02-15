@@ -20,6 +20,13 @@ app.post('/api/login', (req, res) => {
                 if (!isMatch) {
                     return res.status(401).json({ error: 'Mot de passe incorrect' });
                 }
+                // Générer un token JWT
+                const token = jwt.sign(
+                    { userId: user._id, email: user.email }, // Payload avec userId et email
+                    process.env.JWT_SECRET_KEY, // La clé secrète
+                    { expiresIn: '1h' } // Le token expire dans 1 heure
+                );
+
 
                 // Si tout est bon, répondre avec un message de succès
                 res.status(200).json({ message: 'Connexion réussie', user: { lastname: user.lastname, firstname: user.firstname, email: user.email } });

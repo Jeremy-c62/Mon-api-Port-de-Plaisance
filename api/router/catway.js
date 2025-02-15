@@ -9,7 +9,7 @@ router.get('/', catwayController.getCatways.getCatwaysByType);
 router.get('/:id', catwayController.getCatwayById);
 
 // Créer un nouveau catway
-router.post('/', catwayController.createCatway);
+router.post('/api/catway', catwayController.createCatway);
 
 // Modifier un catway par son ID
 router.put('/:id', catwayController.updateCatway);

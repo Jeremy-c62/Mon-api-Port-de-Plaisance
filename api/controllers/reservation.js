@@ -25,13 +25,15 @@ exports.getReservations = async (req, res) => {
 // Créer une nouvelle réservation pour un catway spécifique
 exports.createReservation = async (req, res) => {
     const reservationData = req.body;
-    const { catwayNumber, startDate, endDate } = reservationData;
+    const { catwayNumber, clientName, boatName, startDate, endDate } = reservationData;
 
-    if (!catwayNumber || !startDate || !endDate) {
-        return res.status(400).json({ error: 'Les champs catwayNumber, startDate et endDate sont obligatoires.' });
+    // Vérification que tous les champs obligatoires sont présents
+    if (!catwayNumber || !clientName || !boatName || !startDate || !endDate) {
+        return res.status(400).json({ error: 'Les champs catwayNumber, clientName, boatName, startDate et endDate sont obligatoires.' });
     }
 
     try {
+        // Vérification si le catway existe
         const catway = await Catway.findOne({ catwayNumber });
         if (!catway) {
             return res.status(400).json({ error: `Le catway ${catwayNumber} n'existe pas.` });
@@ -42,7 +44,7 @@ exports.createReservation = async (req, res) => {
             return res.status(400).json({ error: `Le catway ${catwayNumber} ne peut pas être réservé en raison de son état (${catway.catwayState}).` });
         }
 
-        // Vérifier si le catway est déjà réservé pendant cette période
+        // Vérification des conflits de réservation
         const overlappingReservations = await Reservation.find({
             catwayNumber: catwayNumber,
             $or: [
@@ -56,7 +58,13 @@ exports.createReservation = async (req, res) => {
         }
 
         // Si aucune réservation existante et l'état est bon, créer la réservation
-        const newReservation = new Reservation(reservationData);
+        const newReservation = new Reservation({
+            catwayNumber,
+            clientName,
+            boatName,
+            startDate,
+            endDate
+        });
         await newReservation.save();
         res.status(201).json({ message: 'Réservation réussie', reservation: newReservation });
 
