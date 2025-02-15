@@ -8,16 +8,17 @@ const userRoutes = require('./router/user');
 const reservationRoutes = require('./router/reservation');
 const Reservation = require('./models/reservation');
 const Catway = require('./models/catway');
+const catwayRoutes = require('./router/catway');
 require('dotenv').config(); // Charger les variables d'environnement depuis .env
 
 
 // Utilisation des routes pour les utilisateurs et les réservations
 app.use('/api/users', userRoutes);
 app.use('/api/reservation', reservationRoutes);
+
 // Utilisation de bodyParser pour analyser les requêtes JSON
 app.use(express.json());
-// Configuration du port
-const port = process.env.PORT || 8080;
+
 // Activation de CORS pour autoriser les requêtes cross-origin
 app.use(cors());
 
@@ -32,27 +33,19 @@ mongoose.connect(uri)
     .then(() => console.log('Connecté à MongoDB'))
     .catch(err => console.error('Erreur de connexion à MongoDB:', err));
 
-app.get('/api/catways', async (req, res) => {
+app.get('/api/catways', (req, res) => {
     const { catwayType } = req.query;
 
-    try {
-        // Vérifier si catwayType est bien fourni dans la requête
-        if (!catwayType) {
-            return res.status(400).json({ message: 'Le paramètre catwayType est requis' });
-        }
-
-        // Recherche des catways correspondant au type demandé (long ou short)
-        const catways = await Catway.find({ catwayType, catwayState: 'bon état' });
-
-        // Si aucun catway trouvé
-        if (!catways.length) {
-            return res.status(404).json({ message: 'Aucun catway disponible pour ce type.' });
-        }
-
-        res.status(200).json(catways);
-    } catch (error) {
-        console.error('Erreur interne lors de la récupération des catways:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des catways', error: error.message });
+    // Si le type est spécifié, filtrez les résultats, sinon retournez tous les catways
+    if (catwayType) {
+        Catway.find({ catwayType })  // Filtre par type
+            .then((catways) => res.json(catways))
+            .catch((err) => res.status(400).json('Error: ' + err));
+    } else {
+        // Retourne tous les catways si le type n'est pas spécifié
+        Catway.find()
+            .then((catways) => res.json(catways))
+            .catch((err) => res.status(400).json('Error: ' + err));
     }
 });
 
@@ -202,7 +195,7 @@ app.post('/api/users', async (req, res) => {
         res.status(500).json({ error: 'Erreur interne lors de l\'enregistrement de l\'utilisateur' });
     }
 });
-// Route POST pour la connexion des utilisateurs
+//  POST pour la connexion des utilisateurs
 const jwt = require('jsonwebtoken');
 
 app.post('/login', async (req, res) => {
@@ -237,7 +230,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Route GET pour récupérer tous les utilisateurs
+//  GET pour récupérer tous les utilisateurs
 app.get('/api/users', (req, res) => {
     User.find()
         .then(users => {
@@ -249,7 +242,7 @@ app.get('/api/users', (req, res) => {
         });
 });
 
-// Route GET pour récupérer un utilisateur par ID
+//  GET pour récupérer un utilisateur par ID
 app.get('/api/users/:id', (req, res) => {
     const { id } = req.params;
 
@@ -266,7 +259,7 @@ app.get('/api/users/:id', (req, res) => {
         });
 });
 
-// Route PUT pour mettre à jour un utilisateur par ID
+// PUT pour mettre à jour un utilisateur par ID
 app.put('/api/users/:id', (req, res) => {
     const { id } = req.params;
     const updatedData = req.body;
@@ -284,7 +277,7 @@ app.put('/api/users/:id', (req, res) => {
         });
 });
 
-// Route DELETE pour supprimer un utilisateur par ID
+//DELETE pour supprimer un utilisateur par ID
 app.delete('/api/users/:id', (req, res) => {
     const { id } = req.params;
 
@@ -300,6 +293,16 @@ app.delete('/api/users/:id', (req, res) => {
             res.status(500).json({ error: 'Erreur interne lors de la suppression de l\'utilisateur' });
         });
 });
+app.post('/api/catways', (req, res) => {
+    const { catwayNumber, catwayType, catwayState } = req.body;
+    if (!catwayNumber || !catwayType || !catwayState) {
+        return res.status(400).json({ message: 'Le paramètre catwayType est requis' });
+    }
+
+});
+app.use('/api/catways', catwayRoutes);
+// Configuration du port
+const port = process.env.PORT || 8080;
 // Création du serveur HTTP
 const server = http.createServer(app);
 

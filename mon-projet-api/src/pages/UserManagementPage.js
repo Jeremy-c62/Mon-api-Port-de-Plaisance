@@ -3,6 +3,7 @@ import axios from 'axios';
 import UserList from '../components/UserList';
 import AddUserForm from '../components/AddUserForm';
 import EditUserForm from '../components/EditUserForm';
+import Cataway from '../components/Catway';
 
 const UserManagementPage = () => {
     const [users, setUsers] = useState([]);
@@ -77,6 +78,10 @@ const UserManagementPage = () => {
             )}
 
             {error && <p className="text-danger text-center">{error}</p>}
+
+            <div className="mt-5 w-75">
+                <Cataway /> {/* Le composant Cataway.js que nous avons créé */}
+            </div>
         </div>
     );
 };

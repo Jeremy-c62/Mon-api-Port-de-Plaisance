@@ -9,6 +9,7 @@ const userRoutes = require('./router/user');
 const app = express();
 const Reservation = require('./models/reservation');
 const Catway = require('./models/catway');
+const catwayRoutes = require('./routes/cataway');
 
 app.use(cors({
     origin: 'http://localhost:3000',  // Autoriser les requêtes depuis localhost:3000 (React)
@@ -42,23 +43,7 @@ app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).json({ message: 'Erreur interne du serveur' });
 });
-// Ajoutez cette route à votre app.js
-app.get('/api/catways', async (req, res) => {
-    const { catwayType } = req.query;
 
-    try {
-        // Recherche des catways correspondant au type demandé (long ou short)
-        const catways = await Catway.find({ catwayType, catwayState: 'bon état' });
-
-        if (!catways.length) {
-            return res.status(404).json({ message: 'Aucun catway disponible pour ce type.' });
-        }
-
-        res.status(200).json(catways);
-    } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la récupération des catways', error });
-    }
-});
 app.post('/checkAvailability', async (req, res) => {
     const { catwayNumber, startDate, endDate } = req.body;
 
@@ -83,6 +68,8 @@ app.post('/checkAvailability', async (req, res) => {
         res.status(500).json({ message: 'Erreur interne du serveur' });
     }
 });
+
+app.use('/api', catwayRoutes);
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
