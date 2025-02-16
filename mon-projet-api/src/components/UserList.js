@@ -70,11 +70,11 @@ const UserList = ({ users, onEdit }) => {
 
             {/* Affichage des utilisateurs */}
             {userList.length > 0 ? (
-                <table className="table table-sm table-bordered">
+                <table className="table table-sm table-bordered text-center">
                     <thead>
                         <tr>
-                            <th>Prénom</th>
                             <th>Nom</th>
+                            <th>Prénom</th>
                             <th>Email</th>
                             <th className="w-25">Actions</th> {/* Réduction de la taille de la colonne "Actions" */}
                         </tr>
