@@ -201,6 +201,10 @@ const jwt = require('jsonwebtoken');
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email et mot de passe sont requis' });
+    }
+
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
@@ -226,6 +230,9 @@ app.post('/login', async (req, res) => {
         });
     } catch (err) {
         console.error('Erreur lors de la connexion de l\'utilisateur:', err);
+        if (err.name === 'JsonWebTokenError') {
+            return res.status(500).json({ error: 'Erreur lors de la génération du token JWT' });
+        }
         res.status(500).json({ error: 'Erreur interne lors de la connexion de l\'utilisateur' });
     }
 });

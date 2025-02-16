@@ -1,65 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // Utilisation de useNavigate pour la navigation
-import Login from './connection/Login'; // Assurez-vous que ce chemin est correct
-import Bacground from '../image/wharf-2741132_1280.jpg'; // Image de fond par défaut
-import BacgroundAfterLogin from '../image/yachts-6298436_1280.jpg'; // Image de fond après connexion (remplacez par votre nouvelle image)
+import { Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import Bacground from '../image/yachts-6298436_1280.jpg'; // Image de fond
 
 export default function Home() {
-    const [showModal, setShowModal] = useState(false);
-    const [connected, setConnected] = useState(false); // État pour vérifier si l'utilisateur est connecté
+    const [connected, setConnected] = useState(false); // État de la connexion
     const navigate = useNavigate(); // Hook de navigation
 
-    // Fonction pour ouvrir le modal
-    const handleShow = () => setShowModal(true);
+    // Vérification de la connexion au chargement du composant
+    useEffect(() => {
+        const token = localStorage.getItem('token'); // Vérifie si un token existe dans le localStorage
+        if (token) {
+            setConnected(true); // Si un token est présent, cela signifie que l'utilisateur est connecté
+        }
+    }, []);
 
     // Fonction pour naviguer vers la page de réservation
     const handleReservation = () => {
-        navigate('/reservation'); // Naviguer vers la page de réservation
-    };
-
-    // Fonction pour fermer le modal
-    const handleClose = () => setShowModal(false);
-
-    // Fonction pour changer l'état de la connexion
-    const handleLoginSuccess = () => {
-        setConnected(true); // Lorsque l'utilisateur se connecte, on met à jour l'état de la connexion
-        setShowModal(false); // Fermer le modal de connexion après succès
+        navigate('/reservation');
     };
 
     // Fonction pour déconnecter l'utilisateur
     const handleLogout = () => {
+        localStorage.removeItem('token'); // Supprimer le token de localStorage
         setConnected(false); // Réinitialiser l'état de la connexion
+        navigate('/'); // Rediriger vers la page d'accueil après déconnexion
+        window.location.reload();
     };
+
+
 
     return (
         <div
             className="container-fluid p-0"
             style={{
-                backgroundImage: `url(${connected ? BacgroundAfterLogin : Bacground})`, // Change l'image de fond selon l'état de connexion
+                backgroundImage: `url(${Bacground})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                height: '100vh', // Cela garantit que l'image couvre toute la hauteur de la fenêtre
+                height: '100vh',
             }}
         >
             <div className="d-flex justify-content-center align-items-center h-100 text-center text-white">
                 <div>
                     <h1>Bienvenue sur le site du port de plaisance Russel</h1>
-                    <p>Vous pouvez faire une réservation ou vous connecter pour accéder à plus de fonctionnalités.</p>
+                    <p>Vous pouvez faire une réservation ou vous déconnecter si vous êtes connecté.</p>
 
-                    {/* Le bouton de réservation est maintenant toujours accessible */}
                     <Button variant="success" className="mt-3" onClick={handleReservation}>
                         Faire une réservation
                     </Button>
 
-                    {/* Afficher les boutons de connexion ou de déconnexion en fonction de l'état */}
-                    {!connected && (
-                        <Button variant="primary" className="mt-3 ms-3" onClick={handleShow}>
-                            Se connecter
-                        </Button>
-                    )}
-
+                    {/* Afficher uniquement le bouton "Se déconnecter" si l'utilisateur est connecté */}
                     {connected && (
                         <Button variant="danger" className="mt-3 ms-3" onClick={handleLogout}>
                             Se déconnecter
@@ -67,16 +58,6 @@ export default function Home() {
                     )}
                 </div>
             </div>
-
-            {/* Modal (pop-up) pour la page de connexion */}
-            <Modal show={showModal} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Se connecter</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Login onLoginSuccess={handleLoginSuccess} />
-                </Modal.Body>
-            </Modal>
         </div>
     );
 }

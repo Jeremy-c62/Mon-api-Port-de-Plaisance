@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Register from './pages/connection/Register';
-import Login from './pages/connection/Login';
+import Register from './connection/Register.js';
+import Login from './connection/Login.js';
 import Home from './pages/home';
 import Layout from './components/Layout.js';
 import Reservation from './pages/Reservation';
@@ -13,20 +13,17 @@ function App() {
       path: "/",
       element: <Layout />,  // Utilisation du Layout global
       children: [
-        {
-          path: '/',  // Page d'accueil principale
-          element: <Home />
-        },
+
         {
           path: '/register',  // Page d'inscription
           element: <Register />
         },
         {
-          path: '/login',  // Page de connexion
+          path: '/',  // Page de connexion
           element: <Login />
         },
         {
-          path: '/dashboard',  // Nouvelle page d'accueil après connexion
+          path: '/home',  // Nouvelle page d'accueil après connexion
           element: <Home />  // Accessible sans authentification
         },
         {

@@ -15,14 +15,19 @@ export const AuthProvider = ({ children }) => {
 
 
     const login = (formValues) => {
-        axios.post('http://localhost:8080/api/users', formValues)
+        axios.post('http://localhost:8080/login', formValues, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
             .then((res) => {
                 console.log(res.data);
                 setCurrentUser(res.data);
+                localStorage.setItem('token', res.data.token);
                 setSuccessfullyLogin(true);
-
             })
             .catch(error => {
+                console.error(error); // Pour voir l'erreur complète dans la console
                 setFormError(true);
             });
     };
@@ -35,7 +40,8 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setCurrentUser(null); // Réinitialiser l'utilisateur courant
-        localStorage.removeItem('null');
+        localStorage.removeItem('user'); // Nettoyer localStorage
+        localStorage.removeItem('token'); // Nettoyer le token aussi si nécessaire
     };
 
     return (

@@ -21,9 +21,6 @@ export default function Navbar() {
                         <li className="nav-item">
                             <Link className="nav-link" to="/register">Inscription</Link>
                         </li>
-                        <li className="nav-item">
-                            <Link className="nav-link" to="/login">Connexion</Link>
-                        </li>
                         {/* Lien "Réservation" visible même si l'utilisateur n'est pas connecté */}
                         <li className="nav-item">
                             <Link className="nav-link" to="/reservation">Réservation</Link>
