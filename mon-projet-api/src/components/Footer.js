@@ -18,7 +18,7 @@ const Footer = () => {
                                 <a href="/register" className="text-white text-decoration-none">S'inscrire</a>
                             </ListGroup.Item>
                             <ListGroup.Item className="bg-dark border-0 text-white">
-                                <a href="/login" className="text-white text-decoration-none">Se connecter</a>
+                                <a href="/" className="text-white text-decoration-none">Se connecter</a>
                             </ListGroup.Item>
                             <ListGroup.Item className="bg-dark border-0 text-white">
                                 <a href="/reservation" className="text-white text-decoration-none">Réservations</a>
