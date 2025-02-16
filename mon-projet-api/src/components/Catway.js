@@ -28,10 +28,9 @@ const Cataway = () => {
         }
 
         // Déterminer automatiquement le prochain catwayNumber
-        const newCatwayNumber = catways.length + 1;
 
         const newCatwayData = {
-            catwayNumber: newCatwayNumber,
+            catwayNumber: catways.length + 1,
             catwayType: newCatway.catwayType,
             catwayState: newCatway.catwayState
         };
@@ -39,7 +38,7 @@ const Cataway = () => {
         axios.post('http://localhost:8080/api/catways', newCatwayData)
             .then((response) => {
                 setCatways([...catways, response.data]);
-                setNewCatway({ catwayType: '', catwayState: '' });
+                setNewCatway({ catwayType: '', catwayState: '', catwayNumber: '' });
             })
             .catch((error) => {
                 console.error('Error adding catway:', error);
@@ -48,7 +47,7 @@ const Cataway = () => {
 
     // Supprimer un catway
     const handleDeleteCatway = (id) => {
-        console.log('Deleting catway with id:', id);
+        console.log('Suprime le catway selon l\'id:', id);
         axios.delete(`http://localhost:8080/api/catways/${id}`)
             .then(() => {
                 setCatways(catways.filter(catway => catway._id !== id));
@@ -72,7 +71,7 @@ const Cataway = () => {
                 setShowModal(false); // Fermer la modal après la mise à jour
             })
             .catch((error) => {
-                console.error('Error updating catway:', error);
+                console.error('Erreur de mise à jour du catway:', error);
             });
     };
 
@@ -95,7 +94,11 @@ const Cataway = () => {
                     type="number"
                     value={catways.length + 1} // Affiche le prochain numéro automatiquement
                     disabled
-                    placeholder="Catway Number"
+                />
+                <input
+                    type="hidden"
+                    value={catways.length + 1}
+                    onChange={(e) => setNewCatway({ ...newCatway, catwayNumber: e.target.value })}
                 />
             </div>
             <div className="mb-3">
@@ -104,7 +107,7 @@ const Cataway = () => {
                     value={newCatway.catwayType}
                     onChange={(e) => setNewCatway({ ...newCatway, catwayType: e.target.value })}
                 >
-                    <option value="">Select Type</option>
+                    <option value="">Choisir un Type</option>
                     <option value="short">Short</option>
                     <option value="long">Long</option>
                 </select>
@@ -115,20 +118,20 @@ const Cataway = () => {
                     type="text"
                     value={newCatway.catwayState}
                     onChange={(e) => setNewCatway({ ...newCatway, catwayState: e.target.value })}
-                    placeholder="Catway State"
+                    placeholder="Etat des Catway"
                 />
             </div>
             <div className="text-center">
-                <button className="btn btn-primary" onClick={handleAddCatway}>Ajouter Catway</button>
+                <button className="btn btn-primary" onClick={handleAddCatway} disabled={!newCatway.catwayType || !newCatway.catwayState}>Ajouter Catway</button>
             </div>
 
             <h3 className="text-center">Gestion des Catway</h3>
             <table className="table table-striped table-bordered text-center mt-4">
                 <thead>
                     <tr>
-                        <th>Number</th>
+                        <th>Numéros</th>
                         <th>Type</th>
-                        <th>State</th>
+                        <th>Etat</th>
                         <th>Actions</th>
                     </tr>
                 </thead>

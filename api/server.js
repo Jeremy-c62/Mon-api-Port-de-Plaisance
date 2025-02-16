@@ -295,10 +295,23 @@ app.delete('/api/users/:id', (req, res) => {
 });
 app.post('/api/catways', (req, res) => {
     const { catwayNumber, catwayType, catwayState } = req.body;
-    if (!catwayNumber || !catwayType || !catwayState) {
-        return res.status(400).json({ message: 'Le paramètre catwayType est requis' });
-    }
 
+    // Crée une nouvelle instance du modèle Catway
+    const newCatway = new Catway({
+        catwayNumber,
+        catwayType,
+        catwayState
+    });
+
+    // Enregistre dans MongoDB
+    newCatway.save()
+        .then((catway) => {
+            res.status(201).json(catway); // Retourner la réponse avec succès
+        })
+        .catch((error) => {
+            console.error('Erreur lors de l\'ajout du catway:', error);
+            res.status(500).json({ message: 'Erreur lors de l\'ajout du catway' });
+        });
 });
 app.use('/api', catwayRoutes);
 app.use('/api/catways', catwayRoutes);
