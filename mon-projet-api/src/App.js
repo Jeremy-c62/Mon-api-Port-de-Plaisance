@@ -5,8 +5,7 @@ import Home from './pages/home';
 import Layout from './components/Layout.js';
 import Reservation from './pages/Reservation';
 import CardsReservation from './pages/ReservationCard.js';
-import UserManagementPage from './pages/UserManagementPage';
-import PrivateRoute from './components/PrivateRoute';  // Import du composant PrivateRoute
+import UserManagementPage from './pages/UserManagementPage';  // Importation de la nouvelle page UserManagementPage
 
 function App() {
   const router = createBrowserRouter([
@@ -14,6 +13,7 @@ function App() {
       path: "/",
       element: <Layout />,  // Utilisation du Layout global
       children: [
+
         {
           path: '/register',  // Page d'inscription
           element: <Register />
@@ -28,27 +28,16 @@ function App() {
         },
         {
           path: '/reservation',  // Page de réservation
-          element: (
-            <PrivateRoute>
-              <Reservation />
-            </PrivateRoute>
-          )  // Accessible seulement après authentification
+          element: <Reservation />  // Accessible sans authentification
         },
         {
           path: '/reservationCards',  // Nouvelle route pour les cartes de réservation
-          element: (
-            <PrivateRoute>
-              <CardsReservation />
-            </PrivateRoute>
-          )  // Accessible seulement après authentification
+          element: <CardsReservation />  // Accessible sans authentification
         },
+
         {
           path: '/userManagement',  // Nouvelle route pour la page UserManagementPage
-          element: (
-            <PrivateRoute>
-              <UserManagementPage />
-            </PrivateRoute>
-          )  // Accessible seulement après authentification
+          element: <UserManagementPage />  // Page de gestion des utilisateurs avec fonctionnalité complète
         },
       ],
     },
