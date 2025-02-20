@@ -4,7 +4,7 @@ npm nodemon server
 
 Pour lancer react
 cd mon-projet-api
-npm start
+npm start.
 
 Le lien pour connecter mongo compass:
 mongodb+srv://<db_username>:<db_password>@cluster0.pikrp.mongodb.net/
